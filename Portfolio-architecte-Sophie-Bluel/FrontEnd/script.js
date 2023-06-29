@@ -1,38 +1,87 @@
-// Definition of the works API URL
+// Set job API URL
 const worksURL = 'http://localhost:5678/api/works';
 
-// Array to store the works data
+// Array to store job data
 let worksData = [];
 
-// Function that displays the gallery cards
+// Function that displays the cards from the gallery
 const cards = (data) => {
-  // Selecting the gallery element
+
   const gallery = document.querySelector('.gallery');
-  
-  // Resetting the gallery content
+
+  // Reset gallery content
   gallery.innerHTML = '';
 
-  // Iterating over the works data
+  // Iterate over job data
   data.forEach(item => {
-    // Creating a <figure> element for each work
+    // Create a <figure> element for each job
     const figure = document.createElement('figure');
-    
-    // Adding the image and title to the <figure> element
+
+    // Add image and title to the <figure> element
     figure.innerHTML = `<img src="${item.imageUrl}"><p>${item.title}</p>`;
-    
-    // Adding the <figure> element to the gallery
+
+    // Add the <figure> element to the gallery
     gallery.appendChild(figure);
   });
 };
 
-// Fetching the works from the API
-fetch(worksURL)
+// Function that filters the gallery based on the selected category
+const filterGallery = (category) => {
+  let filteredWorks = [];
+
+  switch (category) {
+    case 'all':
+      filteredWorks = worksData;
+      break;
+    case '1':
+      filteredWorks = worksData.filter(item => item.categoryId === 1);
+      break;
+    case '2':
+      filteredWorks = worksData.filter(item => item.categoryId === 2);
+      break;
+    case '3':
+      filteredWorks = worksData.filter(item => item.categoryId === 3);
+      break;
+    default:
+      filteredWorks = worksData;
+  }
+
+  cards(filteredWorks);
+};
+
+// Select filter buttons
+const filterButtons = document.querySelectorAll('.filter-button');
+
+// Listen for clicks on the filter buttons
+filterButtons.forEach(button => {
+  button.addEventListener('click', () => {
+    // Get the category of the clicked button
+    const category = button.getAttribute('data-category');
+
+    // Remove the active class from all buttons
+    filterButtons.forEach(btn => btn.classList.remove('filter-button--active'));
+
+    // Add the active class to the clicked button
+    button.classList.add('filter-button--active');
+
+    // Apply the filter based on the selected category
+    filterGallery(category);
+  });
+});
+
+// Fetch jobs from the API
+fetch(worksURL, {
+  method: 'GET',
+  headers: {
+    'Accept': 'application/json'
+  }
+})
   .then(response => response.json())
   .then(data => {
-    // Storing the works data in the worksData array
+    // Store job data in the worksData array
     worksData = data;
 
-    // Displaying all the works on page load
+    // Display all jobs when the page loads
     cards(worksData);
 
     console.log(data[0]);
