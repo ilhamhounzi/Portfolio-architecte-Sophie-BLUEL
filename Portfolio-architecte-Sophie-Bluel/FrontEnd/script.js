@@ -14,6 +14,7 @@ const afficherCartes = (data) => {
     const image = document.createElement('img');
     image.src = item.imageUrl;
     image.classList.add('gallery-image'); 
+
     imageContainer.appendChild(image);
     figure.appendChild(imageContainer);
 
@@ -70,7 +71,7 @@ const afficherImagesModale = (data) => {
 
     const imgElement = document.createElement('img');
     imgElement.src = item.imageUrl;
-    imgElement.classList.add('gallery-image'); 
+    imgElement.classList.add('gallery-image');
 
     const deleteIcon = document.createElement('i');
     deleteIcon.classList.add('fa', 'fa-trash', 'delete-icon');
@@ -82,6 +83,7 @@ const afficherImagesModale = (data) => {
       afficherCartes(worksData); 
     });
 
+   
     imgElement.addEventListener('click', () => {
       mettreAJourImageActuelle(item.imageUrl);
     });
@@ -155,6 +157,7 @@ fetch(`${worksURL}?_=${cacheBuster}`, {
   });
 
 
+
   const closeModalIcons = document.querySelectorAll('.closeModal');
   closeModalIcons.forEach(icon => {
     icon.addEventListener('click', () => {
@@ -163,19 +166,6 @@ fetch(`${worksURL}?_=${cacheBuster}`, {
     });
   });
 
-  const hideGallery = () => {
-    const titleModal = document.getElementById('titleModal');
-    const modalGalleryContainer = document.getElementById('modalGalleryContainer');
-    const borderLine = document.querySelector('.borderLine');
-    const addImageBtn = document.getElementById('addImage');
-    const imageDeleteLink = document.querySelector('.image-delete');
-
-    titleModal.style.display = 'none';
-    modalGalleryContainer.style.display = 'none';
-    borderLine.style.display = 'none';
-    addImageBtn.style.display = 'none';
-    imageDeleteLink.style.display = 'none';
-  };
 
   const openModalButtons = document.querySelectorAll('.openModalButton');
   openModalButtons.forEach(button => {
@@ -187,9 +177,33 @@ fetch(`${worksURL}?_=${cacheBuster}`, {
   });
 
 
-// Fonction pour supprimer une image
+  window.addEventListener('mousedown', (event) => {
+    const formContainer = document.querySelector('.formContainer');
+    const firstModal = document.getElementById('firstModal');
+    if (
+      event.target === formContainer ||
+      event.target === firstModal ||
+      formContainer.contains(event.target) ||
+      firstModal.contains(event.target)
+    ) {
+      return;
+    }
+
+    const modal = document.querySelector('.modal');
+    modal.style.display = 'none';
+  });
+
+
+
+const modalPopup = document.getElementById('modalPopup');
+const gallery = document.querySelector('.gallery');
+const submitButton = document.getElementById('submitButton');
+
+
+
+
 const supprimerImage = (imageId) => {
-  
+
   fetch(`${worksURL}/${imageId}`, {
     method: 'DELETE',
     headers: {
@@ -207,3 +221,142 @@ const supprimerImage = (imageId) => {
       console.error(error);
     });
 };
+
+const fileUploadButton = document.getElementById('fileUpload');
+const selectedImage = document.getElementById('selectedImage');
+
+const title = document.getElementById('titleInput');
+
+
+const validateButton = document.getElementById('validateButton');
+
+fileUploadButton.addEventListener('click', () => {
+  const fileInput = document.createElement('input');
+  fileInput.id = 'newImage';
+  fileInput.type = 'file';
+  fileInput.accept = 'image/*';
+  fileInput.style.display = 'none';
+  document.body.appendChild(fileInput);
+
+  fileInput.addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const imageURL = URL.createObjectURL(file);
+      selectedImage.style.backgroundImage = `url(${imageURL})`;
+      console.log('Fichier sélectionné :', file);
+      updateSubmitButtonState();
+    }
+  });
+
+  fileInput.click();
+});
+
+
+function ajouterProjet() {
+
+  const titreProjet = document.getElementById('titleInput').value;
+  const imageUrl = selectedImage.style.backgroundImage.slice(4, -1).replace(/"/g, "");  
+
+
+  if (titreProjet.trim() === '') {
+    const msgError = document.getElementById('erreurTitre');
+    msgError.innerHTML = 'Veuillez saisir un titre pour l\'image.';
+    return;
+  }
+
+
+  const nouvelElementProjet = document.createElement('div');
+  nouvelElementProjet.classList.add('projet');
+  nouvelElementProjet.innerHTML = `
+    <img src="${imageUrl}" alt="Image du projet" class="gallery-image">
+    <h3>${titreProjet}</h3>
+  `;
+
+
+  const galerieProjet = document.querySelector('.gallery');
+  galerieProjet.appendChild(nouvelElementProjet);
+
+  
+  document.getElementById('titleInput').value = '';
+  selectedImage.style.backgroundImage = 'none';
+
+
+  updateSubmitButtonState();
+
+
+  const modal = document.querySelector('.modal');
+  modal.style.display = 'none';
+}
+
+
+function ouvrirModal() {
+  const modal = document.getElementById('modalPopup');
+  modal.style.display = 'block';
+  document.body.classList.add('modal-open');
+}
+
+
+const boutonAjoutPhoto = document.getElementById('addImage');
+boutonAjoutPhoto.addEventListener('click', ouvrirModal);
+
+const boutonSoumission = document.getElementById('submitButton');
+boutonSoumission.addEventListener('click', ajouterProjet);
+
+
+var firstModal = document.getElementById("firstModal");
+var closeModal = document.getElementsByClassName("closeModal")[0];
+var modalWrapper = document.getElementsByClassName('modalWrapper');
+
+
+function afficherFirstModal() {
+  firstModal.style.display = "flex";
+  modalPopup.style.display = "none";
+  const modal = document.getElementById('modalPopup');
+  modal.style.display = 'block';
+  document.body.classList.add('modal-open');
+
+
+  const formContainer = document.querySelector('.formContainer');
+  formContainer.style.display = 'none';
+}
+
+
+var arrowLeft = document.querySelector(".fa-solid.fa-arrow-left");
+
+arrowLeft.addEventListener("click", afficherFirstModal);
+
+function getCookie(name) {
+  const cookies = document.cookie.split(';');
+  for (let i = 0; i < cookies.length; i++) {
+    const cookie = cookies[i].trim();
+    if (cookie.startsWith(name + '=')) {
+      return cookie.substring(name.length + 1);
+    }
+  }
+  return '';
+}
+
+let token = getCookie('token');
+
+
+const titleInput = document.getElementById('titleInput');
+const categorySelect = document.getElementById('category'); 
+
+
+const updateSubmitButtonState = () => {
+  const isTitleFilled = titleInput.value.trim() !== '';
+  const isImageUploaded = selectedImage.style.backgroundImage !== 'none';
+  const selectedCategoryValue = categorySelect.value; 
+  const isCategorySelected = selectedCategoryValue === '1' || selectedCategoryValue === '2' || selectedCategoryValue === '3'; 
+
+  if (isTitleFilled && isImageUploaded && isCategorySelected) {
+    submitButton.classList.add('green-button');
+  } else {
+    submitButton.classList.remove('green-button');
+  }
+};
+
+
+titleInput.addEventListener('input', updateSubmitButtonState);
+selectedImage.addEventListener('DOMSubtreeModified', updateSubmitButtonState);
+categorySelect.addEventListener('change', updateSubmitButtonState); 
