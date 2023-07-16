@@ -14,7 +14,6 @@ const afficherCartes = (data) => {
     const image = document.createElement('img');
     image.src = item.imageUrl;
     image.classList.add('gallery-image'); 
-
     imageContainer.appendChild(image);
     figure.appendChild(imageContainer);
 
@@ -76,13 +75,12 @@ const afficherImagesModale = (data) => {
     const deleteIcon = document.createElement('i');
     deleteIcon.classList.add('fa', 'fa-trash', 'delete-icon');
 
-
+   
     deleteIcon.addEventListener('click', () => {
       supprimerImage(item.id); 
       imageContainer.remove(); 
       afficherCartes(worksData); 
     });
-
 
     imgElement.addEventListener('click', () => {
       mettreAJourImageActuelle(item.imageUrl);
@@ -106,6 +104,20 @@ const afficherImagesModale = (data) => {
   });
 };
 
+const openModalButton = (target) => {
+  const modalId = target.dataset.target;
+  const modal = document.getElementById(modalId);
+  modal.style.display = 'block';
+  const formContainer = document.querySelector('.formContainer');
+  formContainer.classList.add('visible');
+};
+
+const modificationButtons = document.querySelectorAll('.openModalButton');
+modificationButtons.forEach(button => {
+  button.addEventListener('click', () => {
+    openModalButton(button);
+  });
+});
 
 const cacheBuster = Date.now(); 
 
@@ -118,7 +130,7 @@ fetch(`${worksURL}?_=${cacheBuster}`, {
 })
   .then(response => {
     if (response.status === 304) {
-  
+
       const cachedData = JSON.parse(localStorage.getItem('worksData'));
       worksData = cachedData;
       afficherCartes(worksData);
@@ -142,3 +154,56 @@ fetch(`${worksURL}?_=${cacheBuster}`, {
     console.error(error);
   });
 
+
+  const closeModalIcons = document.querySelectorAll('.closeModal');
+  closeModalIcons.forEach(icon => {
+    icon.addEventListener('click', () => {
+      const modal = icon.closest('.modal');
+      modal.style.display = 'none';
+    });
+  });
+
+  const hideGallery = () => {
+    const titleModal = document.getElementById('titleModal');
+    const modalGalleryContainer = document.getElementById('modalGalleryContainer');
+    const borderLine = document.querySelector('.borderLine');
+    const addImageBtn = document.getElementById('addImage');
+    const imageDeleteLink = document.querySelector('.image-delete');
+
+    titleModal.style.display = 'none';
+    modalGalleryContainer.style.display = 'none';
+    borderLine.style.display = 'none';
+    addImageBtn.style.display = 'none';
+    imageDeleteLink.style.display = 'none';
+  };
+
+  const openModalButtons = document.querySelectorAll('.openModalButton');
+  openModalButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const modalId = button.getAttribute('data-target');
+      const modal = document.getElementById(modalId);
+      modal.style.display = 'block';
+    });
+  });
+
+
+// Fonction pour supprimer une image
+const supprimerImage = (imageId) => {
+  
+  fetch(`${worksURL}/${imageId}`, {
+    method: 'DELETE',
+    headers: {
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${token}` 
+    }
+  })
+    .then(response => response.json())
+    .then(data => {
+      worksData = worksData.filter(item => item.id !== imageId);
+      afficherImagesModale(worksData);
+      afficherCartes(worksData);
+    })
+    .catch(error => {
+      console.error(error);
+    });
+};
