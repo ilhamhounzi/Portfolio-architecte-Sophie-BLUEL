@@ -71,19 +71,19 @@ const afficherImagesModale = (data) => {
 
     const imgElement = document.createElement('img');
     imgElement.src = item.imageUrl;
-    imgElement.classList.add('gallery-image');
+    imgElement.classList.add('gallery-image'); 
 
     const deleteIcon = document.createElement('i');
     deleteIcon.classList.add('fa', 'fa-trash', 'delete-icon');
 
-   
+
     deleteIcon.addEventListener('click', () => {
       supprimerImage(item.id); 
       imageContainer.remove(); 
       afficherCartes(worksData); 
     });
 
-   
+
     imgElement.addEventListener('click', () => {
       mettreAJourImageActuelle(item.imageUrl);
     });
@@ -156,7 +156,13 @@ fetch(`${worksURL}?_=${cacheBuster}`, {
     console.error(error);
   });
 
+document.addEventListener("DOMContentLoaded", function() {
+  const addImageButton = document.getElementById("addImage");
+  const formContainer = document.querySelector(".formContainer");
 
+  addImageButton.addEventListener("click", function() {
+    formContainer.style.display = "block";
+  });
 
   const closeModalIcons = document.querySelectorAll('.closeModal');
   closeModalIcons.forEach(icon => {
@@ -166,6 +172,19 @@ fetch(`${worksURL}?_=${cacheBuster}`, {
     });
   });
 
+  const hideGallery = () => {
+    const titleModal = document.getElementById('titleModal');
+    const modalGalleryContainer = document.getElementById('modalGalleryContainer');
+    const borderLine = document.querySelector('.borderLine');
+    const addImageBtn = document.getElementById('addImage');
+    const imageDeleteLink = document.querySelector('.image-delete');
+
+    titleModal.style.display = 'none';
+    modalGalleryContainer.style.display = 'none';
+    borderLine.style.display = 'none';
+    addImageBtn.style.display = 'none';
+    imageDeleteLink.style.display = 'none';
+  };
 
   const openModalButtons = document.querySelectorAll('.openModalButton');
   openModalButtons.forEach(button => {
@@ -176,7 +195,7 @@ fetch(`${worksURL}?_=${cacheBuster}`, {
     });
   });
 
-
+ 
   window.addEventListener('mousedown', (event) => {
     const formContainer = document.querySelector('.formContainer');
     const firstModal = document.getElementById('firstModal');
@@ -192,14 +211,18 @@ fetch(`${worksURL}?_=${cacheBuster}`, {
     const modal = document.querySelector('.modal');
     modal.style.display = 'none';
   });
-
+});
 
 
 const modalPopup = document.getElementById('modalPopup');
 const gallery = document.querySelector('.gallery');
 const submitButton = document.getElementById('submitButton');
 
-
+const addImageButton = document.getElementById('addImage');
+addImageButton.addEventListener('click', function() {
+  const firstModal = document.getElementById('firstModal');
+  firstModal.style.display = 'none';
+});
 
 
 const supprimerImage = (imageId) => {
@@ -224,10 +247,7 @@ const supprimerImage = (imageId) => {
 
 const fileUploadButton = document.getElementById('fileUpload');
 const selectedImage = document.getElementById('selectedImage');
-
 const title = document.getElementById('titleInput');
-
-
 const validateButton = document.getElementById('validateButton');
 
 fileUploadButton.addEventListener('click', () => {
@@ -255,7 +275,7 @@ fileUploadButton.addEventListener('click', () => {
 function ajouterProjet() {
 
   const titreProjet = document.getElementById('titleInput').value;
-  const imageUrl = selectedImage.style.backgroundImage.slice(4, -1).replace(/"/g, "");  
+  const imageUrl = selectedImage.style.backgroundImage.slice(4, -1).replace(/"/g, ""); 
 
 
   if (titreProjet.trim() === '') {
@@ -264,7 +284,7 @@ function ajouterProjet() {
     return;
   }
 
-
+ 
   const nouvelElementProjet = document.createElement('div');
   nouvelElementProjet.classList.add('projet');
   nouvelElementProjet.innerHTML = `
@@ -276,10 +296,8 @@ function ajouterProjet() {
   const galerieProjet = document.querySelector('.gallery');
   galerieProjet.appendChild(nouvelElementProjet);
 
-  
   document.getElementById('titleInput').value = '';
   selectedImage.style.backgroundImage = 'none';
-
 
   updateSubmitButtonState();
 
@@ -295,9 +313,9 @@ function ouvrirModal() {
   document.body.classList.add('modal-open');
 }
 
-
 const boutonAjoutPhoto = document.getElementById('addImage');
 boutonAjoutPhoto.addEventListener('click', ouvrirModal);
+
 
 const boutonSoumission = document.getElementById('submitButton');
 boutonSoumission.addEventListener('click', ajouterProjet);
@@ -359,4 +377,4 @@ const updateSubmitButtonState = () => {
 
 titleInput.addEventListener('input', updateSubmitButtonState);
 selectedImage.addEventListener('DOMSubtreeModified', updateSubmitButtonState);
-categorySelect.addEventListener('change', updateSubmitButtonState); 
+categorySelect.addEventListener('change', updateSubmitButtonState);
