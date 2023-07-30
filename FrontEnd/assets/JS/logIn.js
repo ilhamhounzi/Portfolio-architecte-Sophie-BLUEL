@@ -59,10 +59,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Update the 'submitLoginForm' function to display the logout button
 function submitLoginForm() {
-  // ...
+
 
   if (response.ok) {
-    // ...
+
     // Redirect the user to the homepage after successful login
     window.location.replace('/FrontEnd/index.html');
 
@@ -70,7 +70,6 @@ function submitLoginForm() {
     showLogoutButton();
   }
 
-  // ...
 }
 
 // Function to display the logout button in the header

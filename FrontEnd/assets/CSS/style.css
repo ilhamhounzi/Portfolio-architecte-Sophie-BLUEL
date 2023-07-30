@@ -703,7 +703,7 @@ footer nav ul {
     cursor: pointer;
 }
 
-#submitButton #edit-black {
+#submitButton .edit-black {
     display: flex;
 }
 
