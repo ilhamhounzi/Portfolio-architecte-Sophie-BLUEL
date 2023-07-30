@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <!-- Document type declaration and language -->
+    <meta charset="UTF-8">
+<title>Sophie Bluel - Architecte d'intérieur</title>
+    <!-- Page icon -->
+    <link rel="icon" type="image/x-icon" href="../icons/FAV.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Loading Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Work+Sans&display=swap"
+        rel="stylesheet">
+    <!-- Loading Font Awesome icon kit -->
+    <script src="https://kit.fontawesome.com/f266b52627.js" crossorigin="anonymous"></script>
+    <!-- Page metadata -->
+    <meta name="description" content="">
+    <!-- Loading CSS stylesheet -->
+    <link rel="stylesheet" href="../FrontEnd/assets/CSS/style.css">
+</head>
+
+<body>
+    <!-- Header of the login page -->
+    <header class="header-logIn">
+        <!-- Link to the homepage -->
+        <a href="index.html">
+            <h1>Sophie Bluel <span>Architecte d'intérieur</span></h1>
+        </a>
+
+        <!-- Navigation menu -->
+        <nav>
+            <ul>
+                <!-- Navigation links -->
+                <li><a href="/FrontEnd/index.html#projects">Projects</a></li>
+                <li><a href="/FrontEnd/index.html#contact">Contact</a></li>
+                <!-- Check if the user is logged in and display the "Logout" link/button if yes -->
+                <li><a href="Portfolio-architecte-Sophie-Bluel/FrontEnd/index.html">Login</a></li>
+                <li><img src="./assets/icons/instagram.png" alt="Instagram"></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Login Form -->
+    <main class="content-wrapper">
+        <div class="login-box">
+            <!-- Error message display area -->
+            <div id="error-alert"></div>
+            <!-- Login page title -->
+            <h2 class="login-title">Log In</h2>
+            <form class="login-form" method="post">
+                <!-- Email field -->
+                <label for="email" class="login-label">E-mail</label>
+                <input class="login-input" type="email" name="email" required>
+                <!-- Password field -->
+                <label for="password" class="login-label">Password</label>
+                <input class="login-input" type="password" name="password" required>
+                <!-- Button to submit the form -->
+                <input type="submit" class="login-button" name="submit-login" value="Log In">
+            </form>
+            <!-- Link for password recovery -->
+            <a href="#" class="forgot-password-link">Forgot Password</a>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="logIn-footer">
+        <nav>
+            <ul>
+                <!-- Link to Legal Notice -->
+                <li>Mentions Légales</li>
+            </ul>
+        </nav>
+    </footer>
+
+    <!-- JavaScript Script -->
+    <script src="./assets/JS/logIn.js"></script>
+</body>
+
+</html>
