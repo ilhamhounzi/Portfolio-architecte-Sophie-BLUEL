@@ -413,6 +413,8 @@ const updateSubmitButtonState = () => {
   }
 };
 
+
+
 // Event listener for DOMContentLoaded event
 document.addEventListener('DOMContentLoaded', function() {
   // Check if the user is connected (has an adminToken)
@@ -440,16 +442,36 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-// Event listener for DOMContentLoaded event to check if the user is connected and display the bordereau container accordingly
-document.addEventListener('DOMContentLoaded', () => {
-  const isConnected = localStorage.getItem('adminToken') !== null;
-  const bordereauContainer = document.getElementById('bordereau-container');
+// Function to handle logout
+const handleLogout = () => {
+  // Remove the adminToken from localStorage and refresh the page
+  localStorage.removeItem('adminToken');
+  window.location.reload();
+};
 
+// Function to show or hide elements based on the user's connection status
+const toggleConnectedElements = () => {
+  const isConnected = localStorage.getItem('adminToken') !== null;
+  const elementsToToggle = document.querySelectorAll('.openModalButton');
+  const logoutButtonContainer = document.querySelector('.connected');
+  const bordereauContainer = document.getElementById('bordereau-container');
+  const loginLi = document.querySelector('.login-btn');
+
+  logoutButtonContainer.style.display = isConnected ? 'block' : 'none';
   bordereauContainer.style.display = isConnected ? 'flex' : 'none';
+  
+  elementsToToggle.forEach(element => {
+    element.style.display = isConnected ? 'flex' : 'none';
+  });
+
+  loginLi.style.display = isConnected ? 'none' : 'block'; // Show the login button if not connected, hide it if connected
+};
+
+
+document.addEventListener('DOMContentLoaded', () => {
+  toggleConnectedElements();
+
+  // Add click event listener for the logout button
+  document.getElementById('logout-button').addEventListener('click', handleLogout);
 });
 
-// Check if the user is connected and show the login button accordingly
-const isConnected = localStorage.getItem('adminToken') !== null;
-const loginLi = document.querySelector('.login-btn');
-
-loginLi.style.display = isConnected ? 'none' : 'block';
