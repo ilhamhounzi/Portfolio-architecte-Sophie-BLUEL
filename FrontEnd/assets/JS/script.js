@@ -1,5 +1,7 @@
 // Define the base URL for the works API endpoint
 const worksURL = 'http://localhost:5678/api/works';
+const categoriesURL = 'http://localhost:5678/api/categories'; // Define the categories URL
+
 
 // Array to store the fetched works data
 let worksData = [];
@@ -38,6 +40,24 @@ const displayCards = (data) => {
   });
 };
 
+// Function to fetch categories from the API
+const fetchCategories = () => {
+  fetch(categoriesURL)
+    .then(response => response.json())
+    .then(categories => {
+      const categorySelect = document.getElementById('category');
+      categories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category.id;
+        option.textContent = category.name;
+        categorySelect.appendChild(option);
+      });
+    })
+    .catch(error => {
+      console.error('Error fetching categories:', error);
+    });
+};
+
 // Function to filter the gallery based on the selected category
 const filterGallery = (category) => {
   let filteredWorks = [];
@@ -64,19 +84,25 @@ const filterGallery = (category) => {
   displayCards(filteredWorks);
 };
 
-// Select all filter buttons and add click event listeners
-const filterButtons = document.querySelectorAll('.filter-button');
-filterButtons.forEach(button => {
-  button.addEventListener('click', () => {
-    // Get the category value from the data-category attribute of the clicked button
-    const category = button.getAttribute('data-category');
-    // Remove the 'filter-button--active' class from all buttons and add it to the clicked button
-    filterButtons.forEach(btn => btn.classList.remove('filter-button--active'));
-    button.classList.add('filter-button--active');
-    // Filter the gallery based on the selected category
-    filterGallery(category);
+document.addEventListener('DOMContentLoaded', () => {
+  // Fetch and display categories
+  fetchCategories();
+
+  // Select all filter buttons and add click event listeners
+  const filterButtons = document.querySelectorAll('.filter-button');
+  filterButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      // Get the category value from the data-category attribute of the clicked button
+      const category = button.getAttribute('data-category');
+      // Remove the 'filter-button--active' class from all buttons and add it to the clicked button
+      filterButtons.forEach(btn => btn.classList.remove('filter-button--active'));
+      button.classList.add('filter-button--active');
+      // Filter the gallery based on the selected category
+      filterGallery(category);
+    });
   });
 });
+
 
 // Function to display images in the modal based on the provided data
 const displayImagesModal = (data) => {
@@ -151,43 +177,49 @@ editButtons.forEach(button => {
 });
 
 // Generate a cache buster timestamp to ensure fresh data is fetched from the server
-const cacheBuster = Date.now(); 
+const cacheBuster = Date.now();
 
-// Fetch works data from the server
 fetch(`${worksURL}?_=${cacheBuster}`, {
   method: 'GET',
   headers: {
     'Accept': 'application/json',
-    'If-None-Match': localStorage.getItem('etag') 
-  }
+    'If-None-Match': localStorage.getItem('etag'),
+  },
 })
   .then(response => {
-    // If the response status is 304 (Not Modified), use the cached data
-    if (response.status === 304) {
-      const cachedData = JSON.parse(localStorage.getItem('worksData'));
-      worksData = cachedData;
-      // Display the cached data in the gallery
-      displayCards(worksData);
-      console.log('Using cached data');
-      return;
-    }
-    // If the response status is not OK, throw an error
+ if (response.status === 304) {
+  const cachedData = JSON.parse(localStorage.getItem('worksData'));
+  worksData = cachedData;
+  displayCards(worksData);
+  console.log('Données en cache utilisées');
+  return;
+}
+
     if (!response.ok) {
-      throw new Error('HTTP Error ' + response.status);
+      throw new Error('Erreur HTTP ' + response.status);
     }
-    // Parse the response data and update worksData, display the cards, and cache the data
+
+    // Parse the response as JSON
     return response.json()
       .then(data => {
-        worksData = data;
+
+worksData = data;
+
+localStorage.setItem('worksData', JSON.stringify(worksData));
+
         displayCards(worksData);
         displayImagesModal(worksData);
-        localStorage.setItem('worksData', JSON.stringify(data)); 
-        localStorage.setItem('etag', response.headers.get('etag')); 
+
+        // Mettre à jour le cache avec l'en-tête etag
+        const etag = response.headers.get('etag'); // Utiliser response.headers.get
+        localStorage.setItem('worksData', JSON.stringify(data));
+        localStorage.setItem('etag', etag);
+
         console.log(data[0]);
       });
   })
   .catch(error => {
-    console.error(error);
+    console.error('Erreur :', error);
   });
 
 // Event listener for DOMContentLoaded event
@@ -268,22 +300,39 @@ const deleteImage = (imageId) => {
     method: 'DELETE',
     headers: {
       'Accept': 'application/json',
-      'Authorization': `Bearer ${token}` 
+      'Authorization': `Bearer ${token}`
     }
   })
-    .then(response => response.json())
-    .then(data => {
-      // Remove the deleted image from worksData and update the displayed images
+  .then(response => {
+    if (response.status === 204) {
+      // Successful deletion, update the displayed images
       worksData = worksData.filter(item => item.id !== imageId);
       displayImagesModal(worksData);
-      displayCards(worksData);
-    })
-    .catch(error => {
-      console.error(error);
-    });
+      displayCards(worksData); // Update the main gallery
+      
+      // Close the modal if the currently selected image is deleted
+      if (currentImage && currentImage.id === imageId) {
+        closeImageModal();
+      }
+    } else {
+      throw new Error('Failed to delete image');
+    }
+  })
+  .catch(error => {
+    console.error('Error deleting image:', error);
+  });
 };
 
-// Add event listener to the fileUpload button to handle file selection
+    // Close the modal if the currently selected image is deleted
+    if (currentImage && currentImage.id === imageId) {
+      
+const closeImageModal = () => {
+  const modal = document.getElementById('imageModal');
+  modal.style.display = 'none';
+  currentImage = null;
+};
+    }
+
 const fileUploadButton = document.getElementById('fileUpload');
 const selectedImage = document.getElementById('selectedImage');
 const titleInput = document.getElementById('titleInput');
@@ -312,38 +361,63 @@ fileUploadButton.addEventListener('click', () => {
   fileInput.click();
 });
 
-// Function to add a new project to the gallery
+// Event listener for the submit button to add a new project
+const submitButton = document.getElementById('submitButton');
+submitButton.addEventListener('click', (event) => {
+  event.preventDefault(); // Prevent the default form submission behavior
+  addProject(); 
+});
 function addProject() {
   const projectTitle = document.getElementById('titleInput').value;
-  const imageUrl = selectedImage.style.backgroundImage.slice(4, -1).replace(/"/g, ""); 
+  const fileInput = document.getElementById('newImage');
+  const file = fileInput.files[0]; // Get the selected image file
+  const categoryId = document.getElementById('category').value;
 
-  if (projectTitle.trim() === '') {
+  console.log("projectTitle:", projectTitle);
+  console.log("file:", file);
+  console.log("categoryId:", categoryId);
+
+  if (projectTitle.trim() === '' || !file || !categoryId) {
     const errorMsg = document.getElementById('erreurTitre');
-    errorMsg.innerHTML = 'Veuillez entrer un titre pour l\'image.';
+    errorMsg.innerHTML = 'Veuillez remplir tous les champs.';
     return;
   }
 
-  // Create a new project element and append it to the gallery
-  const newProjectElement = document.createElement('div');
-  newProjectElement.classList.add('project');
-  newProjectElement.innerHTML = `
-    <img src="${imageUrl}" alt="Project image" class="gallery-image">
-    <h3>${projectTitle}</h3>
-  `;
+  const formData = new FormData();
+  formData.append('image', file);
+  formData.append('title', projectTitle);
+  formData.append('category', categoryId);
 
-  const projectGallery = document.querySelector('.gallery');
-  projectGallery.appendChild(newProjectElement);
+  fetch(worksURL, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    },
+    body: formData
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('HTTP Error ' + response.status);
+    }
+    return response.json(); // Parse and return the response JSON
+  })
+  .then(data => {
+    // Handle the response data here if needed
+    console.log('New project added:', data);
 
-  // Clear input fields and reset the selected image
-  document.getElementById('titleInput').value = '';
-  selectedImage.style.backgroundImage = 'none';
-
-  // Update the submit button state based on input validity
-  updateSubmitButtonState();
-
-  // Hide the modal after adding the project
-  const modal = document.querySelector('.modal');
-  modal.style.display = 'none';
+    // Add the new project to worksData and update the displayed images
+    worksData.push(data);
+    displayImagesModal(worksData);
+    displayCards(worksData);
+    
+    // Hide the modal
+    const modal = document.getElementById('modalPopup');
+    modal.style.display = 'none';
+    document.body.classList.remove('modal-open');
+  })
+  .catch(error => {
+    console.error('Error adding project:', error);
+  });
 }
 
 // Function to open the modal when the addImage button is clicked
@@ -356,9 +430,6 @@ function openModal() {
 const addPhotoButton = document.getElementById('addImage');
 addPhotoButton.addEventListener('click', openModal);
 
-// Event listener for the submit button to add a new project
-const submitButton = document.getElementById('submitButton');
-submitButton.addEventListener('click', addProject);
 
 // Get the first modal, close modal icon, and modal wrapper elements
 const firstModal = document.getElementById("firstModal");
@@ -394,10 +465,11 @@ function getCookie(name) {
 }
 
 // Get the authentication token from cookies
-let token = getCookie('token');
+let token = localStorage.getItem('adminToken');
 const categorySelect = document.getElementById('category'); 
 
 // Function to update the submit button state based on input validity
+
 const updateSubmitButtonState = () => {
   const isTitleFilled = titleInput.value.trim() !== '';
   const isImageUploaded = selectedImage.style.backgroundImage !== 'none';
@@ -413,34 +485,45 @@ const updateSubmitButtonState = () => {
   }
 };
 
-
-
-// Event listener for DOMContentLoaded event
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', () => {
   // Check if the user is connected (has an adminToken)
   const isConnected = localStorage.getItem('adminToken') !== null;
 
   // Get the logout button and its container
   const logoutButton = document.getElementById('logout-button');
-  const logoutButtonContainer = document.querySelector('.connected');
+  const loginButton = document.getElementById('login-btn');
+  const filterButtons = document.querySelectorAll('.filter-button');
+  const addImageButton = document.getElementById('addImage');
+  const editButtons = document.querySelectorAll('.openModalButton');
 
-  // Function to handle logout
-  const handleLogout = () => {
-    // Remove the adminToken from localStorage and refresh the page
-    localStorage.removeItem('adminToken');
-    window.location.reload();
-  };
-
-  // Add click event listener for the logout button
-  logoutButton.addEventListener('click', handleLogout);
-
-  // Show or hide the logout button container based on whether the user is connected or not
+  // Toggle visibility of login button and filter buttons
   if (isConnected) {
-    logoutButtonContainer.style.display = 'block';
+    logoutButton.style.display = 'block';
+    loginButton.style.display = 'none';
+    filterButtons.forEach(button => {
+      button.style.display = 'none';
+    });
+    addImageButton.style.display = 'none';
+    editButtons.forEach(button => {
+      button.style.display = 'none';
+    });
   } else {
-    logoutButtonContainer.style.display = 'none';
+    logoutButton.style.display = 'none';
+    loginButton.style.display = 'block';
+    filterButtons.forEach(button => {
+      button.style.display = 'block';
+    });
+    addImageButton.style.display = 'block';
+    editButtons.forEach(button => {
+      button.style.display = 'flex';
+    });
   }
+
+
+  // Event listener for the logout button
+  document.getElementById('logout-button').addEventListener('click', handleLogout);
 });
+
 
 // Function to handle logout
 const handleLogout = () => {
@@ -449,29 +532,62 @@ const handleLogout = () => {
   window.location.reload();
 };
 
-// Function to show or hide elements based on the user's connection status
+// Function to toggle connected elements
 const toggleConnectedElements = () => {
   const isConnected = localStorage.getItem('adminToken') !== null;
-  const elementsToToggle = document.querySelectorAll('.openModalButton');
+  const filterButtons = document.querySelectorAll('.filter-button');
   const logoutButtonContainer = document.querySelector('.connected');
   const bordereauContainer = document.getElementById('bordereau-container');
   const loginLi = document.querySelector('.login-btn');
+  const elementsToToggle = document.querySelectorAll('.openModalButton');
 
   logoutButtonContainer.style.display = isConnected ? 'block' : 'none';
   bordereauContainer.style.display = isConnected ? 'flex' : 'none';
   
+
+  filterButtons.forEach(button => {
+    button.style.display = isConnected ? 'none' : 'block';
+  });
+
   elementsToToggle.forEach(element => {
     element.style.display = isConnected ? 'flex' : 'none';
   });
 
-  loginLi.style.display = isConnected ? 'none' : 'block'; // Show the login button if not connected, hide it if connected
+  loginLi.style.display = isConnected ? 'none' : 'block';
 };
 
+// Call the function to toggle elements when the DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+  toggleConnectedElements();
 
+  // Add click event listener for the logout button
+  document.getElementById('logout-button').addEventListener('click', handleLogout);
+
+  // Add click event listener for the "Add Image" button
+  document.getElementById('addImage').addEventListener('click', () => {
+    const firstModal = document.getElementById('firstModal');
+    firstModal.style.display = 'none';
+  });
+  
+  // Add click event listener for the "edit" buttons 
+  const editButtons = document.querySelectorAll('.openModalButton');
+  editButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      openModalButton(button);
+    });
+  });
+
+  // Add event listener for input changes to update submit button state
+   titleInput.addEventListener('input', updateSubmitButtonState);
+  categorySelect.addEventListener('input', updateSubmitButtonState); // Change event to input
+  selectedImage.addEventListener('input', updateSubmitButtonState); // Change event to input
+
+
+// Call the function to toggle elements when the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
   toggleConnectedElements();
 
   // Add click event listener for the logout button
   document.getElementById('logout-button').addEventListener('click', handleLogout);
 });
-
+});
